@@ -1,0 +1,228 @@
+
+== ValidatedAbsBus | Simulink.Bus
+    [1] Requested | type=Enum: ArbBtVcRequest | dim=[1 4] | unit= | min=[] | max=[] | 
+    [2] WheelValid | type=boolean | dim=[1 4] | unit= | min=[] | max=[] | 
+    [3] Valid | type=boolean | dim=[1 1] | unit= | min=0 | max=1 | Validity
+
+== Bus_Abs | Simulink.Bus
+    [1] Requested | type=Enum: ArbBtVcRequest | dim=[1 4] | unit= | min=[] | max=[] | 
+
+== Bus_VcRequest | Simulink.Bus
+    [1] Requested | type=Enum: ArbBtVcRequest | dim=[1 4] | unit= | min=[] | max=[] | 
+    [2] Pressure | type=single | dim=[1 4] | unit=bar | min=[] | max=[] | 
+    [3] VcGradient | type=single | dim=[1 4] | unit=bar/s | min=[] | max=[] | 
+
+== Bus_IbBhms | Simulink.Bus
+    [1] FilteredPressure | type=single | dim=[1 1] | unit=bar | min=[] | max=[] | 
+    [2] Uncertainty | type=single | dim=[1 1] | unit= | min=[] | max=[] | 
+    [3] UncertaintyConfirmation | type=boolean | dim=[1 1] | unit= | min=[] | max=[] | 
+
+== Bus_ArbD | Simulink.Bus
+    [1] Requested | type=Enum: ArbBtVcRequest | dim=[1 4] | unit= | min=[] | max=[] | 
+    [2] Pressure | type=single | dim=[1 4] | unit=bar | min=[] | max=[] | 
+    [3] VcGradient | type=single | dim=[1 4] | unit=bar/s | min=[] | max=[] | 
+    [4] DecelMode | type=Enum: ArbD_Decel_Mode | dim=[1 4] | unit= | min=[] | max=[] | 
+
+== CLIP_LOW_P | Simulink.Parameter
+    Value=5
+    DataType=single | Dim=[1 1] | Unit=bar | Min=5 | Max=5
+    StorageClass=Custom | 
+
+== CLIP_HIGH_P | Simulink.Parameter
+    Value=225
+    DataType=single | Dim=[1 1] | Unit=bar | Min=225 | Max=225
+    StorageClass=Custom | 
+
+== CLIP_HIGH_G | Simulink.Parameter
+    Value=475
+    DataType=single | Dim=[1 1] | Unit=bar/s | Min=475 | Max=475
+    StorageClass=Custom | 
+
+== ArbBt_AllowedTierMatrix | Simulink.Parameter
+    Value=[0 1 1 1 1 0 1 1 0;0 0 0 0 0 0 1 1 0;0 0 0 0 0 0 1 0 0;0 0 0 0 0 0 1 0 0;0 0 0 0 0 0 1 0 1;0 0 0 0 0 0 0 0 1;0 0 0 0 0 0 0 1 0;0 0 0 0 0 0 0 0 0;0 0 0 0 0 0 0 0 0]
+    DataType=boolean | Dim=[9 9] | Unit= | Min=[] | Max=[]
+    StorageClass=Custom | 1. YSC           2,3,4,5,7,8,
+2. SDR+ABS   7,8
+3. ABS            7
+4. TC              7   
+5. SDR           7,9
+6. HPS           9
+7. YSC_BPF     8
+8. TC_BPF       --
+9. SSM          --
+13. BaseBrake (BB) - default when no wheels claim any source
+
+== ArbBt_GradientMax | Simulink.Parameter
+    Value=500
+    DataType=single | Dim=[1 1] | Unit=bar/s | Min=500 | Max=500
+    StorageClass=Custom | 
+
+== ArbBt_GradientMin | Simulink.Parameter
+    Value=-1000
+    DataType=single | Dim=[1 1] | Unit=bar/s | Min=-1000 | Max=-1000
+    StorageClass=Custom | 
+
+== ArbBt_PressureMax | Simulink.Parameter
+    Value=250
+    DataType=single | Dim=[1 1] | Unit=bar | Min=250 | Max=250
+    StorageClass=Custom | 
+
+== ArbBt_PressureMin | Simulink.Parameter
+    Value=0
+    DataType=single | Dim=[1 1] | Unit=bar | Min=0 | Max=0
+    StorageClass=Custom | 
+
+== ArbBt_GradientInactive | Simulink.Parameter
+    Value=-1500
+    DataType=single | Dim=[1 1] | Unit=bar/s | Min=-1500 | Max=-1500
+    StorageClass=Custom | 
+
+== ArbBt_PressureInactive | Simulink.Parameter
+    Value=-250
+    DataType=single | Dim=[1 1] | Unit=bar | Min=-250 | Max=-250
+    StorageClass=Custom | 
+
+== CLIP_LOW_G | Simulink.Parameter
+    Value=-950
+    DataType=single | Dim=[1 1] | Unit=bar/s | Min=-950 | Max=-950
+    StorageClass=Custom | 
+
+== ValidatedVcRequestBus | Simulink.Bus
+    [1] Valid | type=boolean | dim=[1 1] | unit= | min=[] | max=[] | 
+    [2] Pressure | type=single | dim=[1 4] | unit=bar | min=[] | max=[] | 
+    [3] VcGradient | type=single | dim=[1 4] | unit=bar/s | min=[] | max=[] | 
+    [4] Requested | type=Enum: ArbBtVcRequest | dim=[1 4] | unit= | min=[] | max=[] | 
+    [5] WheelValid | type=boolean | dim=[1 4] | unit= | min=[] | max=[] | 
+    [6] ClipPressure | type=boolean | dim=[1 4] | unit= | min=[] | max=[] | 
+    [7] ClipGradient | type=boolean | dim=[1 4] | unit= | min=[] | max=[] | 
+
+== ValidatedArbDBus | Simulink.Bus
+    [1] Valid | type=boolean | dim=[1 1] | unit= | min=[] | max=[] | 
+    [2] Requested | type=Enum: ArbBtVcRequest | dim=[1 4] | unit= | min=[] | max=[] | 
+    [3] VcGradient | type=single | dim=[1 4] | unit=bar/s | min=[] | max=[] | 
+    [4] WheelValid | type=boolean | dim=[1 4] | unit= | min=[] | max=[] | 
+    [5] Pressure | type=single | dim=[1 4] | unit=bar | min=[] | max=[] | 
+    [6] DecelMode | type=Enum: ArbD_Decel_Mode | dim=[1 4] | unit= | min=[] | max=[] | 
+    [7] ClipPressure | type=boolean | dim=[1 4] | unit= | min=[] | max=[] | 
+    [8] ClipGradient | type=boolean | dim=[1 4] | unit= | min=[] | max=[] | 
+
+== Bus_Output | Simulink.Bus
+    [1] State | type=Enum: ArbBtState | dim=[1 1] | unit= | min=[] | max=[] | 
+    [2] VcActive | type=boolean | dim=[1 9] | unit= | min=[] | max=[] | 
+    [3] Brk_Mode | type=Enum: ArbBtBrakeMode | dim=[1 4] | unit= | min=[] | max=[] | 
+    [4] Pressure | type=single | dim=[1 4] | unit=bar | min=[] | max=[] | 
+    [5] VcGradient | type=single | dim=[1 4] | unit=bar/s | min=[] | max=[] | 
+    [6] ClipPressure | type=boolean | dim=[1 4] | unit= | min=[] | max=[] | 
+    [7] ClipGradient | type=boolean | dim=[1 4] | unit= | min=[] | max=[] | 
+
+== Enable_PBP_Test_Interface | Simulink.Parameter
+    Value=1
+    DataType=int32 | Dim=[1 1] | Unit= | Min=[] | Max=[]
+    StorageClass=Custom | 
+
+== PBP_ProfileTable | Simulink.Parameter
+    Value=[{"cycle_index":0,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Tc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":20,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[30,30,30,30],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":60,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[30,30,30,30],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[50,50,50,50],"VcGradient":[100,100,100,100]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":120,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[15,15,15,15],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[25,25,25,25],"VcGradient":[100,100,100,100]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":140,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[100,100,100,100]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":160,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Tc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":0,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Tc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}}]
+    DataType=Bus: PBP_Entry_t | Dim=[1 7] | Unit= | Min=[] | Max=[]
+    StorageClass=Custom | 
+
+== Profile_Priority_YSC_TC | Simulink.Parameter
+    Value=[{"cycle_index":0,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Tc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":20,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[30,30,30,30],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":60,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[30,30,30,30],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[50,50,50,50],"VcGradient":[100,100,100,100]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":120,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[15,15,15,15],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[25,25,25,25],"VcGradient":[100,100,100,100]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":140,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[100,100,100,100]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":160,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Tc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}}]
+    DataType=Bus: PBP_Entry_t | Dim=[1 6] | Unit= | Min=[] | Max=[]
+    StorageClass=Custom | 
+
+== PBP_SafeRow | Simulink.Parameter
+    Value=6
+    DataType=uint16 | Dim=[1 1] | Unit= | Min=[] | Max=[]
+    StorageClass=Custom | 
+
+== Profile_Priority_YSC_TC | Simulink.Parameter
+    Value=[{"cycle_index":0,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Tc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":20,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[30,30,30,30],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":60,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[30,30,30,30],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[50,50,50,50],"VcGradient":[100,100,100,100]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":120,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[15,15,15,15],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[25,25,25,25],"VcGradient":[100,100,100,100]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":140,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[100,100,100,100]},"Tc":{"Requested":["REQUEST","REQUEST","REQUEST","REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[100,100,100,100]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}},{"cycle_index":160,"ArbD":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0],"DecelMode":["DM_INACTIVE","DM_INACTIVE","DM_INACTIVE","DM_INACTIVE"]},"Ysc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Tc":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Ssm":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]},"Abs":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"]},"Hps":{"Requested":["NO_REQUEST","NO_REQUEST","NO_REQUEST","NO_REQUEST"],"Pressure":[0,0,0,0],"VcGradient":[0,0,0,0]}}]
+    DataType=Bus: PBP_Entry_t | Dim=[1 6] | Unit= | Min=[] | Max=[]
+    StorageClass=Auto | 
+
+== PBP_ProfileIndexType | Simulink.AliasType
+    BaseType=uint8 | Unit= | 
+
+== PBP_CycleType | Simulink.AliasType
+    BaseType=uint16 | Unit= | 
+
+== PBP_EntryIndexType | Simulink.AliasType
+    BaseType=uint16 | Unit= | 
+
+== PBP_Status | Simulink.Signal
+    DataType=Enum: PBP_StateType | Dim=-1 | Init= | Unit=
+    StorageClass=ExportedGlobal | 
+
+== PBP_CurrentCycle | Simulink.Signal
+    DataType=PBP_CycleType | Dim=-1 | Init= | Unit=
+    StorageClass=ExportedGlobal | 
+
+== PBP_EntryIndex | Simulink.Signal
+    DataType=PBP_EntryIndexType | Dim=-1 | Init= | Unit=
+    StorageClass=ExportedGlobal | 
+
+== PBP_Entry_t | Simulink.Bus
+    [1] cycle_index | type=PBP_CycleType | dim=1 | unit= | min=[] | max=[] | 
+    [2] ArbD | type=Bus: Bus_ArbD | dim=1 | unit= | min=[] | max=[] | 
+    [3] Ysc | type=Bus: Bus_VcRequest | dim=1 | unit= | min=[] | max=[] | 
+    [4] Tc | type=Bus: Bus_VcRequest | dim=1 | unit= | min=[] | max=[] | 
+    [5] Ssm | type=Bus: Bus_VcRequest | dim=1 | unit= | min=[] | max=[] | 
+    [6] Abs | type=Bus:Bus_Abs | dim=1 | unit= | min=[] | max=[] | 
+    [7] Hps | type=Bus:Bus_VcRequest | dim=1 | unit= | min=[] | max=[] | 
+
+== PBP_ProfileStart | Simulink.Parameter
+    Value=[0 0 0 0 0 0 0 0]
+    DataType=uint16 | Dim=[1 8] | Unit= | Min=[] | Max=[]
+    StorageClass=Custom | 
+
+== PBP_ProfileLength | Simulink.Parameter
+    Value=[6 0 0 0 0 0 0 0]
+    DataType=uint16 | Dim=[1 8] | Unit= | Min=[] | Max=[]
+    StorageClass=Custom | 
+
+== PBP_CycleIndexTable | Simulink.Parameter
+    Value=[0 20 60 120 140 160 0]
+    DataType=uint16 | Dim=[1 7] | Unit= | Min=[] | Max=[]
+    StorageClass=Custom | 
+
+== PBP_MAX_PROFILES | Simulink.Parameter
+    Value=1
+    DataType=uint8 | Dim=[1 1] | Unit= | Min=[] | Max=[]
+    StorageClass=Custom | 
+
+== PBP_SafeRow | Simulink.Parameter
+    Value=6
+    DataType=uint16 | Dim=[1 1] | Unit= | Min=[] | Max=[]
+    StorageClass=Custom | 
+
+== PBP_BypassFIM | Simulink.Signal
+    DataType=boolean | Dim=1 | Init=0 | Unit=
+    StorageClass=Custom | 
+
+== PBP_BypassSMM | Simulink.Signal
+    DataType=boolean | Dim=1 | Init=0 | Unit=
+    StorageClass=Custom | 
+
+== EnableTestInterface | Simulink.Signal
+    DataType=boolean | Dim=1 | Init=0 | Unit=
+    StorageClass=Custom | 
+
+== StartSelectedTest | Simulink.Signal
+    DataType=boolean | Dim=1 | Init=0 | Unit=
+    StorageClass=Custom | 
+
+== AbortTest | Simulink.Signal
+    DataType=boolean | Dim=1 | Init=0 | Unit=
+    StorageClass=Custom | 
+
+== SelectedTestProfile | Simulink.Signal
+    DataType=PBP_ProfileIndexType | Dim=1 | Init=0 | Unit=
+    StorageClass=Custom | 
+
+== PBP_StateType | Simulink.data.dictionary.EnumTypeDefinition
+    PBP_IDLE = 0 | 
+    PBP_READY = 1 | 
+    PBP_RUNNING = 2 | 
+    PBP_COMPLETED = 3 | 
+    PBP_ERROR = 4 | 
+    Default=PBP_IDLE

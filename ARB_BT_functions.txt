@@ -1,0 +1,1453 @@
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Output/ArbBt_Output
+function [State, VcActive, Brk_Mode, Pressure, VcGradient, ClipPressure, ClipGradient] = ArbBtOutput(ArbBt_State, ...
+    ResolvedPressure, ...
+    ResolvedGradient, ...
+    ResolvedMode, ResolvedClipP, ResolvedClipG)
+% FUNCTION NAME:
+%   ArbBtOutput
+%
+% DESCRIPTION:
+%   Generates the ArbBt output signals based on the current arbitration
+%   state and resolved pressure, gradient, and brake mode values.
+%   Reference: Section 11.7, REQ_ASW_ARB_BT_SW_043-047.
+%
+% INPUT:
+%   ArbBt_State      - Current ArbBt arbitration state.
+%   ResolvedPressure - Resolved pressure values from arbitration.
+%   ResolvedGradient - Resolved gradient values from arbitration.
+%   ResolvedMode     - Resolved brake mode values from arbitration.
+%
+% OUTPUT:
+%   State      - Current ArbBt arbitration state output.
+%   VcActive   - Vehicle control function active status array.
+%   Brk_Mode   - Brake mode output values.
+%   Pressure   - Pressure output values.
+%   VcGradient - Vehicle control gradient output values.
+
+%% Inactive Values
+ArbBt_PressureInactive = -250;
+
+% TODO: Dictionary reference once resolution fixed
+ArbBt_GradientInactive = -1500;
+%Initialize Clip Flag values
+ClipPressure = false(1,4);
+ClipGradient = false(1,4);
+%% Define Vehicle Control Indices
+idxYsc = int32(1);
+idxAbs = int32(2);
+idxTc = int32(3);
+idxArbD = int32(4);
+idxSsm = int32(5);
+idxHps = int32(6);
+
+%% ArbBt State Output
+State = ArbBt_State;
+
+%% Determine Pressure, Gradient and Brake Mode Outputs
+arbBtActive = ...
+    ArbBt_State == ArbBtState.ARB_BT_ACTIVE;
+
+if arbBtActive
+    % REQ_ASW_ARB_BT_SW_045:
+    % Pass through unmodified, no re-clip/re-scale.
+    Pressure = ResolvedPressure;
+    VcGradient = ResolvedGradient;
+    Brk_Mode = ResolvedMode;
+    ClipPressure = ResolvedClipP;
+    ClipGradient = ResolvedClipG;
+else
+    % REQ_ASW_ARB_BT_SW_046:
+    % DISABLED/INACTIVE/WAITING force safe defaults.
+    inactivePressureVector = ...
+        repmat(ArbBt_PressureInactive, 1, 4);
+
+    Pressure = ...
+        single(inactivePressureVector);
+
+    inactiveGradientVector = ...
+        repmat(ArbBt_GradientInactive, 1, 4);
+
+    VcGradient = ...
+        single(inactiveGradientVector);
+
+    inactiveBrakeModeVector = ...
+        repmat(ArbBtBrakeMode.BM_INACTIVE, 1, 4);
+
+    Brk_Mode = ...
+        inactiveBrakeModeVector;
+end
+
+%% Initialize Vehicle Control Active Status
+% VcActive order:
+% 1 - YSC
+% 2 - ABS
+% 3 - TC
+% 4 - ArbD
+% 5 - SSM
+% 6 - HPS
+% 7 - BDC
+% 8 - PCC
+% 9 - DSP
+VcActive = false(1, 9);
+
+%% Determine Active Vehicle Control Functions
+if arbBtActive
+
+    %% YSC Active
+    yscNormalActive = ...
+        Brk_Mode == ArbBtBrakeMode.BM_YSC_ACTIVE;
+
+    yscBpfActive = ...
+        Brk_Mode == ArbBtBrakeMode.BM_YSCBPF_ACTIVE;
+
+    yscModeActive = ...
+        yscNormalActive | yscBpfActive;
+
+    yscActive = ...
+        any(yscModeActive);
+
+    VcActive(idxYsc) = ...
+        yscActive;
+
+    %% ABS Active
+    absNormalActive = ...
+        Brk_Mode == ArbBtBrakeMode.BM_ABS_ACTIVE;
+
+    arbDAbsModeForAbs = ...
+        Brk_Mode == ArbBtBrakeMode.BM_ARBD_ABS_ACTIVE;
+
+    absModeActive = ...
+        absNormalActive | arbDAbsModeForAbs;
+
+    absActive = ...
+        any(absModeActive);
+
+    VcActive(idxAbs) = ...
+        absActive;
+
+    %% TC Active
+    tcNormalActive = ...
+        Brk_Mode == ArbBtBrakeMode.BM_TC_ACTIVE;
+
+    tcBpfActive = ...
+        Brk_Mode == ArbBtBrakeMode.BM_TCBPF_ACTIVE;
+
+    tcModeActive = ...
+        tcNormalActive | tcBpfActive;
+
+    tcActive = ...
+        any(tcModeActive);
+
+    VcActive(idxTc) = ...
+        tcActive;
+
+    %% ArbD Active
+    arbDNormalActive = ...
+        Brk_Mode == ArbBtBrakeMode.BM_ARBD_ACTIVE;
+
+    arbDAbsModeForArbD = ...
+        Brk_Mode == ArbBtBrakeMode.BM_ARBD_ABS_ACTIVE;
+
+    arbDModeActive = ...
+        arbDNormalActive | arbDAbsModeForArbD;
+
+    arbDActive = ...
+        any(arbDModeActive);
+
+    VcActive(idxArbD) = ...
+        arbDActive;
+
+    %% SSM Active
+    ssmModeActive = ...
+        Brk_Mode == ArbBtBrakeMode.BM_SSM_ACTIVE;
+
+    ssmActive = ...
+        any(ssmModeActive);
+
+    VcActive(idxSsm) = ...
+        ssmActive;
+
+    %% HPS Active
+    hpsModeActive = ...
+        Brk_Mode == ArbBtBrakeMode.BM_HPS_ACTIVE;
+
+    hpsActive = ...
+        any(hpsModeActive);
+
+    VcActive(idxHps) = ...
+        hpsActive;
+
+    % 7 - BDC
+    % 8 - PCC
+    % 9 - DSP
+    % No interface in scope; remain false.
+end
+
+end
+
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Validate/Compute_ArbRequested
+function arbRequested = ComputeArbRequested( ...
+    YscValid, TcValid, SsmValid, HpsValid, ArbDValid, AbsValid)
+% FUNCTION NAME:
+%   ComputeArbRequested
+%
+% DESCRIPTION:
+%   Determines whether a valid arbitration request is active.
+%
+% INPUT:
+%   YscValid  - Validated YSC request.
+%   TcValid   - Validated TC request.
+%   SsmValid  - Validated SSM request.
+%   HpsValid  - Validated HPS request.
+%   ArbDValid - Validated ArbD request.
+%   AbsValid  - Validated ABS request.
+%
+% OUTPUT:
+%   arbRequested - Indicates whether an arbitration request is active.
+
+%% YSC Request
+yscRequestMask = ...
+    YscValid.Requested ~= ArbBtVcRequest.NO_REQUEST;
+
+yscWheelRequested = ...
+    YscValid.WheelValid & yscRequestMask;
+
+yscRequested = ...
+    any(yscWheelRequested);
+
+%% TC Request
+tcRequestMask = ...
+    TcValid.Requested ~= ArbBtVcRequest.NO_REQUEST;
+
+tcWheelRequested = ...
+    TcValid.WheelValid & tcRequestMask;
+
+tcRequested = ...
+    any(tcWheelRequested);
+
+%% SSM Request
+ssmRequestMask = ...
+    SsmValid.Requested ~= ArbBtVcRequest.NO_REQUEST;
+
+ssmWheelRequested = ...
+    SsmValid.WheelValid & ssmRequestMask;
+
+ssmRequested = ...
+    any(ssmWheelRequested);
+
+%% HPS Request
+hpsRequestMask = ...
+    HpsValid.Requested ~= ArbBtVcRequest.NO_REQUEST;
+
+hpsWheelRequested = ...
+    HpsValid.WheelValid & hpsRequestMask;
+
+hpsRequested = ...
+    any(hpsWheelRequested);
+
+%% ArbD Request
+arbDRequestMask = ...
+    ArbDValid.Requested ~= ArbBtVcRequest.NO_REQUEST;
+
+arbDWheelRequested = ...
+    ArbDValid.WheelValid & arbDRequestMask;
+
+arbDRequested = ...
+    any(arbDWheelRequested);
+
+%% ABS Request
+absRequestMask = ...
+    AbsValid.Requested ~= ArbBtVcRequest.NO_REQUEST;
+
+absRequestPresent = ...
+    any(absRequestMask);
+
+absRequested = ...
+    AbsValid.Valid && absRequestPresent;
+
+%% Overall Arbitration Request
+requestGroup1 = ...
+    yscRequested || tcRequested;
+
+requestGroup2 = ...
+    ssmRequested || hpsRequested;
+
+requestGroup3 = ...
+    arbDRequested || absRequested;
+
+requestGroup4 = ...
+    requestGroup1 || requestGroup2;
+
+arbRequested = ...
+    requestGroup4 || requestGroup3;
+
+end
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Validate/Validate_ArbDRequest
+function ValidatedVcRequestBus = ValidateVcRequest( ...
+    VcRequestBus, ...
+    ArbBt_PressureInactive, ArbBt_GradientInactive, ...
+    ArbBt_PressureMin, ArbBt_PressureMax, ...
+    ArbBt_GradientMin, ArbBt_GradientMax, ...
+    CLIP_LOW_P, CLIP_HIGH_P, CLIP_LOW_G, CLIP_HIGH_G)
+
+% FUNCTION NAME:
+%   ValidateVcRequest
+%
+% DESCRIPTION:
+%   Validates the vehicle control request by checking pressure and8
+%   gradient values against the configured inactive, minimum, clipping and
+%   maximum limits.
+%
+%   Requirement Reference:
+%   Section 11.2, REQ_ASW_ARB_BT_SW_013-017
+%
+% INPUT:
+%   VcRequestBus - Vehicle control request bus.
+%   ArbBt_PressureInactive - Inactive pressure reference value.
+%   ArbBt_GradientInactive - Inactive gradient reference value.
+%   ArbBt_PressureMin - Minimum allowed invalid pressure value.
+%   ArbBt_PressureMax - Maximum allowed invalid pressure value.
+%   CLIP_LOW_P - Minimum clipping pressure value.
+%   CLIP_HIGH_P - Maximum clipping pressure value.
+%   ArbBt_GradientMin - Minimum allowed invalid gradient value.
+%   ArbBt_GradientMax - Maximum allowed invalid gradient value.
+%   CLIP_LOW_G - Minimum clipping gradient value.
+%   CLIP_HIGH_G - Maximum clipping gradient value.
+% OUTPUT:
+%   ValidatedVcRequestBus - Validated vehicle control request output bus.
+
+% Constants
+PressureTol = single(0.001);
+GradientTol = single(0.001);
+%% Wheel Indices
+firstWheel = int32(1);
+lastWheel  = int32(4);
+ 
+% Initialize
+
+ValidatedVcRequestBus = struct( ...
+    'Valid',        false, ...
+    'Pressure',     VcRequestBus.Pressure, ...
+    'VcGradient',   VcRequestBus.VcGradient, ...
+    'Requested',    VcRequestBus.Requested, ...
+    'WheelValid',   false(1, 4), ...
+    'ClipPressure', false(1, 4), ...
+    'ClipGradient', false(1, 4));
+%% Validate Wheel Requests
+for w = firstWheel:lastWheel
+    req = VcRequestBus.Requested(w);
+    noRequest     = req == ArbBtVcRequest.NO_REQUEST;
+    activeRequest = (req == ArbBtVcRequest.REQUEST) ||...
+        (req == ArbBtVcRequest.REQUEST_BPF);
+ %% No Request
+    if noRequest
+        inactiveValuesOk = ...
+            abs(VcRequestBus.Pressure(w)   - ArbBt_PressureInactive) <= ...
+            PressureTol && ...
+            abs(VcRequestBus.VcGradient(w) - ArbBt_GradientInactive) <= ...
+            GradientTol;
+        if inactiveValuesOk
+            ValidatedVcRequestBus.WheelValid(w) = true;
+	else
+	    % Inactive pressure or gradient is outside
+            % allowed tolerance.
+        end
+ %% Active Request
+    elseif activeRequest
+        rawPressure = VcRequestBus.Pressure(w);
+        rawGradient = VcRequestBus.VcGradient(w);
+ 
+        % Stage 1: outside the physical range = invalid, no clipping, 
+        % no flag.
+        requestValuesOk = ...
+            rawPressure >= ArbBt_PressureMin && rawPressure <=...
+            ArbBt_PressureMax && ...
+            rawGradient >= ArbBt_GradientMin && rawGradient <=...
+            ArbBt_GradientMax;
+ %% Validate Pressure and Gradient
+        if requestValuesOk
+            % Stage 2: clip to the tighter band and flag only 
+            % if the value changed.
+            ValidatedVcRequestBus.Pressure(w)     =...
+                min(max(rawPressure, CLIP_LOW_P), CLIP_HIGH_P);
+            ValidatedVcRequestBus.VcGradient(w)   =...
+                min(max(rawGradient, CLIP_LOW_G), CLIP_HIGH_G);
+            ValidatedVcRequestBus.ClipPressure(w) =...
+                (rawPressure < CLIP_LOW_P) || (rawPressure > CLIP_HIGH_P);
+            ValidatedVcRequestBus.ClipGradient(w) =....
+                (rawGradient < CLIP_LOW_G) || (rawGradient > CLIP_HIGH_G);
+            ValidatedVcRequestBus.WheelValid(w)   = true;
+	else
+	   % Requested pressure or gradient is outside range
+        end
+    else
+	% Unsupported request value.
+        % Retain initialized invalid output.
+    end
+end
+% Overall Validity
+ValidatedVcRequestBus.Valid = all(ValidatedVcRequestBus.WheelValid);
+end
+ 
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Validate/Validate_HpsRequest
+function ValidatedVcRequestBus = ValidateVcRequest( ...
+    VcRequestBus, ...
+    ArbBt_PressureInactive, ArbBt_GradientInactive, ...
+    ArbBt_PressureMin, ArbBt_PressureMax, ...
+    ArbBt_GradientMin, ArbBt_GradientMax, ...
+    CLIP_LOW_P, CLIP_HIGH_P, CLIP_LOW_G, CLIP_HIGH_G)
+
+% FUNCTION NAME:
+%   ValidateVcRequest
+%
+% DESCRIPTION:
+%   Validates the vehicle control request by checking pressure and8
+%   gradient values against the configured inactive, minimum, clipping and
+%   maximum limits.
+%
+%   Requirement Reference:
+%   Section 11.2, REQ_ASW_ARB_BT_SW_013-017
+%
+% INPUT:
+%   VcRequestBus - Vehicle control request bus.
+%   ArbBt_PressureInactive - Inactive pressure reference value.
+%   ArbBt_GradientInactive - Inactive gradient reference value.
+%   ArbBt_PressureMin - Minimum allowed invalid pressure value.
+%   ArbBt_PressureMax - Maximum allowed invalid pressure value.
+%   CLIP_LOW_P - Minimum clipping pressure value.
+%   CLIP_HIGH_P - Maximum clipping pressure value.
+%   ArbBt_GradientMin - Minimum allowed invalid gradient value.
+%   ArbBt_GradientMax - Maximum allowed invalid gradient value.
+%   CLIP_LOW_G - Minimum clipping gradient value.
+%   CLIP_HIGH_G - Maximum clipping gradient value.
+% OUTPUT:
+%   ValidatedVcRequestBus - Validated vehicle control request output bus.
+
+% Constants
+PressureTol = single(0.001);
+GradientTol = single(0.001);
+%% Wheel Indices
+firstWheel = int32(1);
+lastWheel  = int32(4);
+ 
+% Initialize
+
+ValidatedVcRequestBus = struct( ...
+    'Valid',        false, ...
+    'Pressure',     VcRequestBus.Pressure, ...
+    'VcGradient',   VcRequestBus.VcGradient, ...
+    'Requested',    VcRequestBus.Requested, ...
+    'WheelValid',   false(1, 4), ...
+    'ClipPressure', false(1, 4), ...
+    'ClipGradient', false(1, 4));
+%% Validate Wheel Requests
+for w = firstWheel:lastWheel
+    req = VcRequestBus.Requested(w);
+    noRequest     = req == ArbBtVcRequest.NO_REQUEST;
+    activeRequest = (req == ArbBtVcRequest.REQUEST) ||...
+        (req == ArbBtVcRequest.REQUEST_BPF);
+ %% No Request
+    if noRequest
+        inactiveValuesOk = ...
+            abs(VcRequestBus.Pressure(w)   - ArbBt_PressureInactive) <= ...
+            PressureTol && ...
+            abs(VcRequestBus.VcGradient(w) - ArbBt_GradientInactive) <= ...
+            GradientTol;
+        if inactiveValuesOk
+            ValidatedVcRequestBus.WheelValid(w) = true;
+	else
+	    % Inactive pressure or gradient is outside
+            % allowed tolerance.
+        end
+ %% Active Request
+    elseif activeRequest
+        rawPressure = VcRequestBus.Pressure(w);
+        rawGradient = VcRequestBus.VcGradient(w);
+ 
+        % Stage 1: outside the physical range = invalid, no clipping, 
+        % no flag.
+        requestValuesOk = ...
+            rawPressure >= ArbBt_PressureMin && rawPressure <=...
+            ArbBt_PressureMax && ...
+            rawGradient >= ArbBt_GradientMin && rawGradient <=...
+            ArbBt_GradientMax;
+ %% Validate Pressure and Gradient
+        if requestValuesOk
+            % Stage 2: clip to the tighter band and flag only 
+            % if the value changed.
+            ValidatedVcRequestBus.Pressure(w)     =...
+                min(max(rawPressure, CLIP_LOW_P), CLIP_HIGH_P);
+            ValidatedVcRequestBus.VcGradient(w)   =...
+                min(max(rawGradient, CLIP_LOW_G), CLIP_HIGH_G);
+            ValidatedVcRequestBus.ClipPressure(w) =...
+                (rawPressure < CLIP_LOW_P) || (rawPressure > CLIP_HIGH_P);
+            ValidatedVcRequestBus.ClipGradient(w) =....
+                (rawGradient < CLIP_LOW_G) || (rawGradient > CLIP_HIGH_G);
+            ValidatedVcRequestBus.WheelValid(w)   = true;
+	else
+	   % Requested pressure or gradient is outside range
+        end
+    else
+	% Unsupported request value.
+        % Retain initialized invalid output.
+    end
+end
+% Overall Validity
+ValidatedVcRequestBus.Valid = all(ValidatedVcRequestBus.WheelValid);
+end
+ 
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Validate/Validate_McP
+function [validatedPressure, McpValid] = ValidateMcp(FilteredPressure, ...
+ArbBt_PressureInactive, ...
+ArbBt_PressureMax, ...
+ArbBt_PressureMin)
+% FUNCTION NAME:
+%   ValidateMcp
+%
+% DESCRIPTION:
+%   Validates the MCP pressure against the configured minimum
+%   and maximum pressure limits.
+%
+% INPUT:
+%   FilteredPressure       - MCP pressure to be validated.
+%   ArbBt_PressureInactive - Inactive MCP pressure value.
+%   ArbBt_PressureMax      - Maximum valid MCP pressure.
+%   ArbBt_PressureMin      - Minimum valid MCP pressure.
+%
+% OUTPUT:
+%   validatedPressure - Validated MCP pressure.
+%   McpValid          - MCP pressure validity status.
+
+%% Check MCP Pressure Validity
+pressureAboveMin = ...
+    FilteredPressure >= ArbBt_PressureMin;
+
+pressureBelowMax = ...
+    FilteredPressure <= ArbBt_PressureMax;
+
+McpValid = ...
+    pressureAboveMin && pressureBelowMax;
+
+%% Determine Validated MCP Pressure
+if McpValid
+
+    pressureLowerLimited = ...
+        max(FilteredPressure, ArbBt_PressureMin);
+
+    validatedPressure = ...
+        min(pressureLowerLimited, ArbBt_PressureMax);
+
+else
+
+    validatedPressure = ...
+        ArbBt_PressureInactive;
+
+end
+
+end
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Validate/Validate_SsmRequest
+function ValidatedVcRequestBus = ValidateVcRequest( ...
+    VcRequestBus, ...
+    ArbBt_PressureInactive, ArbBt_GradientInactive, ...
+    ArbBt_PressureMin, ArbBt_PressureMax, ...
+    ArbBt_GradientMin, ArbBt_GradientMax, ...
+    CLIP_LOW_P, CLIP_HIGH_P, CLIP_LOW_G, CLIP_HIGH_G)
+
+% FUNCTION NAME:
+%   ValidateVcRequest
+%
+% DESCRIPTION:
+%   Validates the vehicle control request by checking pressure and8
+%   gradient values against the configured inactive, minimum, clipping and
+%   maximum limits.
+%
+%   Requirement Reference:
+%   Section 11.2, REQ_ASW_ARB_BT_SW_013-017
+%
+% INPUT:
+%   VcRequestBus - Vehicle control request bus.
+%   ArbBt_PressureInactive - Inactive pressure reference value.
+%   ArbBt_GradientInactive - Inactive gradient reference value.
+%   ArbBt_PressureMin - Minimum allowed invalid pressure value.
+%   ArbBt_PressureMax - Maximum allowed invalid pressure value.
+%   CLIP_LOW_P - Minimum clipping pressure value.
+%   CLIP_HIGH_P - Maximum clipping pressure value.
+%   ArbBt_GradientMin - Minimum allowed invalid gradient value.
+%   ArbBt_GradientMax - Maximum allowed invalid gradient value.
+%   CLIP_LOW_G - Minimum clipping gradient value.
+%   CLIP_HIGH_G - Maximum clipping gradient value.
+% OUTPUT:
+%   ValidatedVcRequestBus - Validated vehicle control request output bus.
+
+% Constants
+PressureTol = single(0.001);
+GradientTol = single(0.001);
+%% Wheel Indices
+firstWheel = int32(1);
+lastWheel  = int32(4);
+ 
+% Initialize
+
+ValidatedVcRequestBus = struct( ...
+    'Valid',        false, ...
+    'Pressure',     VcRequestBus.Pressure, ...
+    'VcGradient',   VcRequestBus.VcGradient, ...
+    'Requested',    VcRequestBus.Requested, ...
+    'WheelValid',   false(1, 4), ...
+    'ClipPressure', false(1, 4), ...
+    'ClipGradient', false(1, 4));
+%% Validate Wheel Requests
+for w = firstWheel:lastWheel
+    req = VcRequestBus.Requested(w);
+    noRequest     = req == ArbBtVcRequest.NO_REQUEST;
+    activeRequest = (req == ArbBtVcRequest.REQUEST) ||...
+        (req == ArbBtVcRequest.REQUEST_BPF);
+ %% No Request
+    if noRequest
+        inactiveValuesOk = ...
+            abs(VcRequestBus.Pressure(w)   - ArbBt_PressureInactive) <= ...
+            PressureTol && ...
+            abs(VcRequestBus.VcGradient(w) - ArbBt_GradientInactive) <= ...
+            GradientTol;
+        if inactiveValuesOk
+            ValidatedVcRequestBus.WheelValid(w) = true;
+	else
+	    % Inactive pressure or gradient is outside
+            % allowed tolerance.
+        end
+ %% Active Request
+    elseif activeRequest
+        rawPressure = VcRequestBus.Pressure(w);
+        rawGradient = VcRequestBus.VcGradient(w);
+ 
+        % Stage 1: outside the physical range = invalid, no clipping, 
+        % no flag.
+        requestValuesOk = ...
+            rawPressure >= ArbBt_PressureMin && rawPressure <=...
+            ArbBt_PressureMax && ...
+            rawGradient >= ArbBt_GradientMin && rawGradient <=...
+            ArbBt_GradientMax;
+ %% Validate Pressure and Gradient
+        if requestValuesOk
+            % Stage 2: clip to the tighter band and flag only 
+            % if the value changed.
+            ValidatedVcRequestBus.Pressure(w)     =...
+                min(max(rawPressure, CLIP_LOW_P), CLIP_HIGH_P);
+            ValidatedVcRequestBus.VcGradient(w)   =...
+                min(max(rawGradient, CLIP_LOW_G), CLIP_HIGH_G);
+            ValidatedVcRequestBus.ClipPressure(w) =...
+                (rawPressure < CLIP_LOW_P) || (rawPressure > CLIP_HIGH_P);
+            ValidatedVcRequestBus.ClipGradient(w) =....
+                (rawGradient < CLIP_LOW_G) || (rawGradient > CLIP_HIGH_G);
+            ValidatedVcRequestBus.WheelValid(w)   = true;
+	else
+	   % Requested pressure or gradient is outside range
+        end
+    else
+	% Unsupported request value.
+        % Retain initialized invalid output.
+    end
+end
+% Overall Validity
+ValidatedVcRequestBus.Valid = all(ValidatedVcRequestBus.WheelValid);
+end
+ 
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Validate/Validate_TcRequest
+function ValidatedVcRequestBus = ValidateVcRequest( ...
+    VcRequestBus, ...
+    ArbBt_PressureInactive, ArbBt_GradientInactive, ...
+    ArbBt_PressureMin, ArbBt_PressureMax, ...
+    ArbBt_GradientMin, ArbBt_GradientMax, ...
+    CLIP_LOW_P, CLIP_HIGH_P, CLIP_LOW_G, CLIP_HIGH_G)
+
+% FUNCTION NAME:
+%   ValidateVcRequest
+%
+% DESCRIPTION:
+%   Validates the vehicle control request by checking pressure and8
+%   gradient values against the configured inactive, minimum, clipping and
+%   maximum limits.
+%
+%   Requirement Reference:
+%   Section 11.2, REQ_ASW_ARB_BT_SW_013-017
+%
+% INPUT:
+%   VcRequestBus - Vehicle control request bus.
+%   ArbBt_PressureInactive - Inactive pressure reference value.
+%   ArbBt_GradientInactive - Inactive gradient reference value.
+%   ArbBt_PressureMin - Minimum allowed invalid pressure value.
+%   ArbBt_PressureMax - Maximum allowed invalid pressure value.
+%   CLIP_LOW_P - Minimum clipping pressure value.
+%   CLIP_HIGH_P - Maximum clipping pressure value.
+%   ArbBt_GradientMin - Minimum allowed invalid gradient value.
+%   ArbBt_GradientMax - Maximum allowed invalid gradient value.
+%   CLIP_LOW_G - Minimum clipping gradient value.
+%   CLIP_HIGH_G - Maximum clipping gradient value.
+% OUTPUT:
+%   ValidatedVcRequestBus - Validated vehicle control request output bus.
+
+% Constants
+PressureTol = single(0.001);
+GradientTol = single(0.001);
+%% Wheel Indices
+firstWheel = int32(1);
+lastWheel  = int32(4);
+ 
+% Initialize
+
+ValidatedVcRequestBus = struct( ...
+    'Valid',        false, ...
+    'Pressure',     VcRequestBus.Pressure, ...
+    'VcGradient',   VcRequestBus.VcGradient, ...
+    'Requested',    VcRequestBus.Requested, ...
+    'WheelValid',   false(1, 4), ...
+    'ClipPressure', false(1, 4), ...
+    'ClipGradient', false(1, 4));
+%% Validate Wheel Requests
+for w = firstWheel:lastWheel
+    req = VcRequestBus.Requested(w);
+    noRequest     = req == ArbBtVcRequest.NO_REQUEST;
+    activeRequest = (req == ArbBtVcRequest.REQUEST) ||...
+        (req == ArbBtVcRequest.REQUEST_BPF);
+ %% No Request
+    if noRequest
+        inactiveValuesOk = ...
+            abs(VcRequestBus.Pressure(w)   - ArbBt_PressureInactive) <= ...
+            PressureTol && ...
+            abs(VcRequestBus.VcGradient(w) - ArbBt_GradientInactive) <= ...
+            GradientTol;
+        if inactiveValuesOk
+            ValidatedVcRequestBus.WheelValid(w) = true;
+	else
+	    % Inactive pressure or gradient is outside
+            % allowed tolerance.
+        end
+ %% Active Request
+    elseif activeRequest
+        rawPressure = VcRequestBus.Pressure(w);
+        rawGradient = VcRequestBus.VcGradient(w);
+ 
+        % Stage 1: outside the physical range = invalid, no clipping, 
+        % no flag.
+        requestValuesOk = ...
+            rawPressure >= ArbBt_PressureMin && rawPressure <=...
+            ArbBt_PressureMax && ...
+            rawGradient >= ArbBt_GradientMin && rawGradient <=...
+            ArbBt_GradientMax;
+ %% Validate Pressure and Gradient
+        if requestValuesOk
+            % Stage 2: clip to the tighter band and flag only 
+            % if the value changed.
+            ValidatedVcRequestBus.Pressure(w)     =...
+                min(max(rawPressure, CLIP_LOW_P), CLIP_HIGH_P);
+            ValidatedVcRequestBus.VcGradient(w)   =...
+                min(max(rawGradient, CLIP_LOW_G), CLIP_HIGH_G);
+            ValidatedVcRequestBus.ClipPressure(w) =...
+                (rawPressure < CLIP_LOW_P) || (rawPressure > CLIP_HIGH_P);
+            ValidatedVcRequestBus.ClipGradient(w) =....
+                (rawGradient < CLIP_LOW_G) || (rawGradient > CLIP_HIGH_G);
+            ValidatedVcRequestBus.WheelValid(w)   = true;
+	else
+	   % Requested pressure or gradient is outside range
+        end
+    else
+	% Unsupported request value.
+        % Retain initialized invalid output.
+    end
+end
+% Overall Validity
+ValidatedVcRequestBus.Valid = all(ValidatedVcRequestBus.WheelValid);
+end
+ 
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Validate/Validate_YscRequest
+function ValidatedVcRequestBus = ValidateVcRequest( ...
+    VcRequestBus, ...
+    ArbBt_PressureInactive, ArbBt_GradientInactive, ...
+    ArbBt_PressureMin, ArbBt_PressureMax, ...
+    ArbBt_GradientMin, ArbBt_GradientMax, ...
+    CLIP_LOW_P, CLIP_HIGH_P, CLIP_LOW_G, CLIP_HIGH_G)
+
+% FUNCTION NAME:
+%   ValidateVcRequest
+%
+% DESCRIPTION:
+%   Validates the vehicle control request by checking pressure and8
+%   gradient values against the configured inactive, minimum, clipping and
+%   maximum limits.
+%
+%   Requirement Reference:
+%   Section 11.2, REQ_ASW_ARB_BT_SW_013-017
+%
+% INPUT:
+%   VcRequestBus - Vehicle control request bus.
+%   ArbBt_PressureInactive - Inactive pressure reference value.
+%   ArbBt_GradientInactive - Inactive gradient reference value.
+%   ArbBt_PressureMin - Minimum allowed invalid pressure value.
+%   ArbBt_PressureMax - Maximum allowed invalid pressure value.
+%   CLIP_LOW_P - Minimum clipping pressure value.
+%   CLIP_HIGH_P - Maximum clipping pressure value.
+%   ArbBt_GradientMin - Minimum allowed invalid gradient value.
+%   ArbBt_GradientMax - Maximum allowed invalid gradient value.
+%   CLIP_LOW_G - Minimum clipping gradient value.
+%   CLIP_HIGH_G - Maximum clipping gradient value.
+% OUTPUT:
+%   ValidatedVcRequestBus - Validated vehicle control request output bus.
+
+% Constants
+PressureTol = single(0.001);
+GradientTol = single(0.001);
+%% Wheel Indices
+firstWheel = int32(1);
+lastWheel  = int32(4);
+ 
+% Initialize
+
+ValidatedVcRequestBus = struct( ...
+    'Valid',        false, ...
+    'Pressure',     VcRequestBus.Pressure, ...
+    'VcGradient',   VcRequestBus.VcGradient, ...
+    'Requested',    VcRequestBus.Requested, ...
+    'WheelValid',   false(1, 4), ...
+    'ClipPressure', false(1, 4), ...
+    'ClipGradient', false(1, 4));
+%% Validate Wheel Requests
+for w = firstWheel:lastWheel
+    req = VcRequestBus.Requested(w);
+    noRequest     = req == ArbBtVcRequest.NO_REQUEST;
+    activeRequest = (req == ArbBtVcRequest.REQUEST) ||...
+        (req == ArbBtVcRequest.REQUEST_BPF);
+ %% No Request
+    if noRequest
+        inactiveValuesOk = ...
+            abs(VcRequestBus.Pressure(w)   - ArbBt_PressureInactive) <= ...
+            PressureTol && ...
+            abs(VcRequestBus.VcGradient(w) - ArbBt_GradientInactive) <= ...
+            GradientTol;
+        if inactiveValuesOk
+            ValidatedVcRequestBus.WheelValid(w) = true;
+	else
+	    % Inactive pressure or gradient is outside
+            % allowed tolerance.
+        end
+ %% Active Request
+    elseif activeRequest
+        rawPressure = VcRequestBus.Pressure(w);
+        rawGradient = VcRequestBus.VcGradient(w);
+ 
+        % Stage 1: outside the physical range = invalid, no clipping, 
+        % no flag.
+        requestValuesOk = ...
+            rawPressure >= ArbBt_PressureMin && rawPressure <=...
+            ArbBt_PressureMax && ...
+            rawGradient >= ArbBt_GradientMin && rawGradient <=...
+            ArbBt_GradientMax;
+ %% Validate Pressure and Gradient
+        if requestValuesOk
+            % Stage 2: clip to the tighter band and flag only 
+            % if the value changed.
+            ValidatedVcRequestBus.Pressure(w)     =...
+                min(max(rawPressure, CLIP_LOW_P), CLIP_HIGH_P);
+            ValidatedVcRequestBus.VcGradient(w)   =...
+                min(max(rawGradient, CLIP_LOW_G), CLIP_HIGH_G);
+            ValidatedVcRequestBus.ClipPressure(w) =...
+                (rawPressure < CLIP_LOW_P) || (rawPressure > CLIP_HIGH_P);
+            ValidatedVcRequestBus.ClipGradient(w) =....
+                (rawGradient < CLIP_LOW_G) || (rawGradient > CLIP_HIGH_G);
+            ValidatedVcRequestBus.WheelValid(w)   = true;
+	else
+	   % Requested pressure or gradient is outside range
+        end
+    else
+	% Unsupported request value.
+        % Retain initialized invalid output.
+    end
+end
+% Overall Validity
+ValidatedVcRequestBus.Valid = all(ValidatedVcRequestBus.WheelValid);
+end
+ 
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Arbitrate/Set_Outputs_Inactive/SetOutputsInactive
+function Set_Outputs_Inactive()
+% FUNCTION NAME:
+%   Set_Outputs_Inactive
+%
+% DESCRIPTION:
+%   Sets the arbitration outputs to the inactive state. The output gating
+%   functionality is implemented in ArbBt_Output, which monitors the
+%   current state every 5 ms and gates the outputs accordingly.
+%
+% INPUT:
+%   None.
+%
+% OUTPUT:
+%   None.
+
+    % Already implemented in ArbBt_Output which monitors Current State every
+    % 5 ms and gates outputs.
+end
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Arbitrate/Update_Outputs/Update_out
+function Update_Outputs()
+% FUNCTION NAME:
+%   Update_Outputs
+%
+% DESCRIPTION:
+%   Updates the arbitration outputs. The output update functionality is
+%   implemented in ArbBt_Output, which monitors the current state every
+%   5 ms and gates the outputs accordingly.
+%
+% INPUT:
+%   None.
+%
+% OUTPUT:
+%   None.
+
+    % Already implemented in ArbBt_Output which monitors Current State every
+    % 5 ms and gates outputs.
+end
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Arbitrate/RunPriorityCore/PriorityCore/BuildCandidateMatrices
+function [ActiveMask, Pressure, VcGradient, ClipP, ClipG] = BuildCandidateMatrices( ...
+    ArbDValid, YscValid, TcValid, SsmValid, HpsValid, AbsValid, ...
+    validatedPressure)
+% FUNCTION NAME:
+%   BuildCandidateMatrices
+%
+% DESCRIPTION:
+%   Builds candidate matrices for arbitration based on validated
+%   vehicle control requests and their corresponding priority tiers.
+%
+% INPUT:
+%   ArbDValid         - Validated system deceleration request.
+%   YscValid          - Validated YSC request.
+%   TcValid           - Validated TC request.
+%   SsmValid          - Validated SSM request.
+%   HpsValid          - Validated HPS request.
+%   AbsValid          - Validated ABS request.
+%   validatedPressure - Validated MCP pressure.
+%
+% OUTPUT:
+%   ActiveMask - Active request mask for each arbitration tier and wheel.
+%   Pressure    - Pressure candidate matrix for arbitration.
+%   VcGradient  - Vehicle control gradient candidate matrix.
+
+%% Define Tier Indices
+tier1 = int32(1);
+tier2 = int32(2);
+tier3 = int32(3);
+tier4 = int32(4);
+tier5 = int32(5);
+tier6 = int32(6);
+tier7 = int32(7);
+tier8 = int32(8);
+tier9 = int32(9);
+
+%% Define Wheel Indices
+firstWheel = int32(1);
+lastWheel = int32(4);
+
+%% Initialize Candidate Matrices
+ActiveMask = false(9, 4);
+
+zeroMatrix = zeros(9, 4);
+
+Pressure = single(zeroMatrix);
+VcGradient = single(zeroMatrix);
+ClipP = false(9,4); 
+ClipG = false(9,4); 
+%% Tier 1 - YSC
+yscRequested = ...
+    YscValid.Requested == ArbBtVcRequest.REQUEST;
+
+ActiveMask(tier1, :) = ...
+    YscValid.WheelValid & yscRequested;
+
+yscPressure = ...
+    single(YscValid.Pressure);
+
+Pressure(tier1, :) = ...
+    yscPressure;
+
+yscGradient = ...
+    single(YscValid.VcGradient);
+
+VcGradient(tier1, :) = ...
+    yscGradient;
+
+ClipP(tier1,:)= YscValid.ClipPressure;
+ClipG(tier1,:)= YscValid.ClipGradient;
+%% Tier 2 - System Decel Request + ABS
+arbDRequested = ...
+    ArbDValid.Requested == ArbBtVcRequest.REQUEST;
+
+absHbaMode = ...
+    ArbDValid.DecelMode == ArbD_Decel_Mode.DM_ABS_HBA_ACTIVE;
+
+absDecelMode = ...
+    ArbDValid.DecelMode == ArbD_Decel_Mode.DM_ABS_DECEL_ACTIVE;
+
+arbDAbsMode = ...
+    absHbaMode | absDecelMode;
+
+arbDAbsActive = ...
+    ArbDValid.WheelValid & arbDRequested;
+
+ActiveMask(tier2, :) = ...
+    arbDAbsActive & arbDAbsMode;
+
+arbDPressure = ...
+    single(ArbDValid.Pressure);
+
+Pressure(tier2, :) = ...
+    arbDPressure;
+
+arbDGradient = ...
+    single(ArbDValid.VcGradient);
+
+VcGradient(tier2, :) = ...
+    arbDGradient;
+
+ClipP(tier2,:)= ArbDValid.ClipPressure;
+ClipG(tier2,:)= ArbDValid.ClipGradient;
+%% Tier 3 - ABS Standalone
+absRequested = ...
+    AbsValid.Requested == ArbBtVcRequest.REQUEST;
+
+ActiveMask(tier3, :) = ...
+    AbsValid.WheelValid & absRequested;
+
+for w = firstWheel:lastWheel
+
+    arbDWheelValid = ...
+        ArbDValid.WheelValid(w);
+
+    arbDWheelRequested = ...
+        ArbDValid.Requested(w) == ArbBtVcRequest.REQUEST;
+
+    arbDWheelActive = ...
+        arbDWheelValid && arbDWheelRequested;
+
+    if arbDWheelActive
+
+        wheelPressure = ...
+            single(ArbDValid.Pressure(w));
+
+        wheelGradient = ...
+            single(ArbDValid.VcGradient(w));
+
+        Pressure(tier3, w) = ...
+            wheelPressure;
+
+        VcGradient(tier3, w) = ...
+            wheelGradient;
+        ClipP(tier3,w) = ArbDValid.ClipPressure(w);
+        ClipG(tier3,w) = ArbDValid.ClipGradient(w);
+    else
+
+        fallbackPressure = ...
+            single(validatedPressure);
+
+        zeroGradient = ...
+            single(0);
+
+        Pressure(tier3, w) = ...
+            fallbackPressure;
+
+        VcGradient(tier3, w) = ...
+            zeroGradient;
+        ClipP(tier3,w) = false;
+        ClipG(tier3,w) = false;
+    end
+end
+
+%% Tier 4 - TC
+tcRequested = ...
+    TcValid.Requested == ArbBtVcRequest.REQUEST;
+
+ActiveMask(tier4, :) = ...
+    TcValid.WheelValid & tcRequested;
+
+tcPressure = ...
+    single(TcValid.Pressure);
+
+Pressure(tier4, :) = ...
+    tcPressure;
+
+tcGradient = ...
+    single(TcValid.VcGradient);
+
+VcGradient(tier4, :) = ...
+    tcGradient;
+ClipP(tier4,:)= TcValid.ClipPressure;
+ClipG(tier4,:)= TcValid.ClipGradient;
+
+%% Tier 5 - System Decel Request Without Concurrent ABS
+hbaMode = ...
+    ArbDValid.DecelMode == ArbD_Decel_Mode.DM_HBA_ACTIVE;
+
+decelMode = ...
+    ArbDValid.DecelMode == ArbD_Decel_Mode.DM_DECEL_ACTIVE;
+
+arbDNormalMode = ...
+    hbaMode | decelMode;
+
+arbDNormalActive = ...
+    ArbDValid.WheelValid & arbDRequested;
+
+ActiveMask(tier5, :) = ...
+    arbDNormalActive & arbDNormalMode;
+
+Pressure(tier5, :) = ...
+    arbDPressure;
+
+VcGradient(tier5, :) = ...
+    arbDGradient;
+ClipP(tier5,:)= ArbDValid.ClipPressure;
+ClipG(tier5,:)= ArbDValid.ClipGradient;
+%% Tier 6 - HPS
+hpsRequested = ...
+    HpsValid.Requested == ArbBtVcRequest.REQUEST;
+
+ActiveMask(tier6, :) = ...
+    HpsValid.WheelValid & hpsRequested;
+
+hpsPressure = ...
+    single(HpsValid.Pressure);
+
+Pressure(tier6, :) = ...
+    hpsPressure;
+
+hpsGradient = ...
+    single(HpsValid.VcGradient);
+
+VcGradient(tier6, :) = ...
+    hpsGradient;
+ClipP(tier6,:)= HpsValid.ClipPressure;
+ClipG(tier6,:)= HpsValid.ClipGradient;
+%% Tier 7 - YSC Brake Pre-Fill
+yscBpfRequested = ...
+    YscValid.Requested == ArbBtVcRequest.REQUEST_BPF;
+
+yscPressureBelowMcp = ...
+    validatedPressure > YscValid.Pressure;
+
+yscBpfActive = ...
+    YscValid.WheelValid & yscBpfRequested;
+
+ActiveMask(tier7, :) = ...
+    yscBpfActive & yscPressureBelowMcp;
+
+Pressure(tier7, :) = ...
+    yscPressure;
+
+VcGradient(tier7, :) = ...
+    yscGradient;
+
+ClipP(tier7,:)= YscValid.ClipPressure;
+ClipG(tier7,:)= YscValid.ClipGradient;
+%% Tier 8 - TC Brake Pre-Fill
+tcBpfRequested = ...
+    TcValid.Requested == ArbBtVcRequest.REQUEST_BPF;
+
+tcPressureBelowMcp = ...
+    validatedPressure > TcValid.Pressure;
+
+tcBpfActive = ...
+    TcValid.WheelValid & tcBpfRequested;
+
+ActiveMask(tier8, :) = ...
+    tcBpfActive & tcPressureBelowMcp;
+
+Pressure(tier8, :) = ...
+    tcPressure;
+
+VcGradient(tier8, :) = ...
+    tcGradient;
+ClipP(tier8,:)= TcValid.ClipPressure;
+ClipG(tier8,:)= TcValid.ClipGradient;
+%% Tier 9 - SSM
+ssmRequested = ...
+    SsmValid.Requested == ArbBtVcRequest.REQUEST;
+
+ActiveMask(tier9, :) = ...
+    SsmValid.WheelValid & ssmRequested;
+
+ssmPressure = ...
+    single(SsmValid.Pressure);
+
+Pressure(tier9, :) = ...
+    ssmPressure;
+
+ssmGradient = ...
+    single(SsmValid.VcGradient);
+
+VcGradient(tier9, :) = ...
+    ssmGradient;
+ClipP(tier9,:)= SsmValid.ClipPressure;
+ClipG(tier9,:)= SsmValid.ClipGradient;
+end
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Arbitrate/RunPriorityCore/PriorityCore/PriorityArbitrationCore
+function [ResolvedPressure, ResolvedGradient, ResolvedMode, ResolvedClipP, ResolvedClipG] = PriorityArbitrationCore(ActiveMask, ...
+    Pressure, ...
+    VcGradient, ...
+    ArbBt_AllowedTierMatrix, ClipP, ClipG, validatedPressure) ...
+% FUNCTION NAME:
+%   PriorityArbitrationCore
+%
+% DESCRIPTION:
+%   Performs priority arbitration among active request tiers and resolves
+%   the pressure, gradient, and brake mode for each wheel.
+%
+% INPUT:
+%   ActiveMask - Active request mask for each tier and wheel.
+%   Pressure - Pressure candidate matrix for each tier and wheel.
+%   VcGradient - Vehicle control gradient candidate matrix.
+%   validatedPressure - Validated MCP pressure used for base braking.
+%   ArbBt_AllowedTierMatrix - Compatibility matrix between tiers.
+%
+% OUTPUT:
+%   ResolvedPressure - Resolved pressure for each wheel.
+%   ResolvedGradient - Resolved vehicle control gradient for each wheel.
+%   ResolvedMode - Resolved brake mode for each wheel.
+
+%% Define Index Values
+zeroTier = int32(0);
+firstTier = int32(1);
+lastTier = int32(9);
+
+firstWheel = int32(1);
+lastWheel = int32(4);
+
+%% Initialize Resolved Pressure
+basePressureVector = ...
+    repmat(validatedPressure, 1, 4);
+
+ResolvedPressure = ...
+    single(basePressureVector);
+
+%% Initialize Resolved Gradient
+zeroGradientVector = ...
+    zeros(1, 4);
+
+ResolvedGradient = ...
+    single(zeroGradientVector);
+
+%% Initialize Resolved Mode
+baseBrakeModeVector = ...
+    repmat(ArbBtBrakeMode.BM_BASE_BRAKING, 1, 4);
+
+ResolvedMode = ...
+    baseBrakeModeVector;
+
+%% Initialize Claimed Wheels
+Claimed = false(1, 4);
+
+%Initialize Resolve ClipP & ClipG
+ResolvedClipP = false(1,4);
+ResolvedClipG = false(1,4);
+%% Step A: Determine Main Priority Tier
+mainTier = zeroTier;
+
+for t = firstTier:lastTier
+
+    tierActiveVector = ...
+        ActiveMask(t, :);
+
+    tierActive = ...
+        any(tierActiveVector);
+
+    if tierActive
+        mainTier = t;
+        break;
+    end
+end
+
+%% Check Whether Any Tier Is Active
+noActiveTier = ...
+    mainTier == zeroTier;
+
+if noActiveTier
+    return;
+end
+
+%% Step B: Main Priority Tier Claims Active Wheels
+for w = firstWheel:lastWheel
+
+    mainTierWheelActive = ...
+        ActiveMask(mainTier, w);
+
+    if mainTierWheelActive
+
+        selectedPressure = ...
+            Pressure(mainTier, w);
+
+        resolvedWheelPressure = ...
+            single(selectedPressure);
+
+        selectedGradient = ...
+            VcGradient(mainTier, w);
+
+        resolvedWheelGradient = ...
+            single(selectedGradient);
+
+        resolvedWheelMode = ...
+            TierToBrakeMode(mainTier);
+
+        ResolvedPressure(w) = ...
+            resolvedWheelPressure;
+
+        ResolvedGradient(w) = ...
+            resolvedWheelGradient;
+
+        ResolvedMode(w) = ...
+            resolvedWheelMode;
+
+        ResolvedClipP(w) = ClipP(mainTier,w);
+
+        ResolvedClipG(w) = ClipG(mainTier,w);
+        Claimed(w) = true;
+    end
+end
+
+%% Step C: Resolve Remaining Wheels
+for w = firstWheel:lastWheel
+
+    wheelClaimed = ...
+        Claimed(w);
+
+    if wheelClaimed
+        continue;
+    end
+
+    for t = firstTier:lastTier
+
+        differentTier = ...
+            t ~= mainTier;
+
+        tierAllowed = ...
+            ArbBt_AllowedTierMatrix(mainTier, t);
+
+        tierWheelActive = ...
+            ActiveMask(t, w);
+
+        tierCompatible = ...
+            differentTier && tierAllowed;
+
+        candidateAllowed = ...
+            tierCompatible && tierWheelActive;
+
+        if candidateAllowed
+
+            ResolvedPressure(w) = ...
+                Pressure(t, w);
+
+            ResolvedGradient(w) = ...
+                VcGradient(t, w);
+
+            resolvedWheelMode = ...
+               TierToBrakeMode(t);
+
+            ResolvedMode(w) = ...
+                resolvedWheelMode;
+
+            Claimed(w) = true;
+            break;
+        end
+    end
+end
+
+end
+
+
+function Res_mode =TierToBrakeMode(t)
+% FUNCTION NAME:
+%   TierToBrakeMode
+%
+% DESCRIPTION:
+%   Converts an arbitration priority tier into the corresponding
+%   brake mode.
+%
+% INPUT:
+%   t - Arbitration priority tier.
+%
+% OUTPUT:
+%   Res_mode - Brake mode corresponding to the specified priority tier.
+
+switch t
+
+    case 1
+        Res_mode = ArbBtBrakeMode.BM_YSC_ACTIVE;
+
+    case 2
+        Res_mode = ArbBtBrakeMode.BM_ARBD_ABS_ACTIVE;
+
+    case 3
+        Res_mode = ArbBtBrakeMode.BM_ABS_ACTIVE;
+
+    case 4
+        Res_mode = ArbBtBrakeMode.BM_TC_ACTIVE;
+
+    case 5
+        Res_mode = ArbBtBrakeMode.BM_ARBD_ACTIVE;
+
+    case 6
+        Res_mode = ArbBtBrakeMode.BM_HPS_ACTIVE;
+
+    case 7
+        Res_mode = ArbBtBrakeMode.BM_YSCBPF_ACTIVE;
+
+    case 8
+        Res_mode = ArbBtBrakeMode.BM_TCBPF_ACTIVE;
+
+    otherwise
+        Res_mode = ArbBtBrakeMode.BM_SSM_ACTIVE;
+
+end
+
+end
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Arbitrate/ActM_ReleaseVehicleControl/ReleaseWrapper/PBP_OFF/ActM_RelVehCtrl
+function ActM_ReleaseVehicleControl()
+% FUNCTION NAME:
+%   ActM_ReleaseVehicleControl
+%
+% DESCRIPTION:
+%   RTE client call for releasing vehicle control. No operation is
+%   performed during Model-in-the-Loop (MIL) execution.
+%
+% INPUT:
+%   None.
+%
+% OUTPUT:
+%   None.
+
+    % RTE client call. MIL No Operation!
+end
+
+##### MATLAB FUNCTION: ArbBt/ArbBt_Arbitrate/ActM_ReleaseVehicleControl/ReleaseWrapper/PBP_ON/ReleaseCall/ActM_RelVehCtrl
+function ActM_ReleaseVehicleControl()
+% FUNCTION NAME:
+%   ActM_ReleaseVehicleControl
+%
+% DESCRIPTION:
+%   RTE client call for releasing vehicle control. No operation is
+%   performed during Model-in-the-Loop (MIL) execution.
+%
+% INPUT:
+%   None.
+%
+% OUTPUT:
+%   None.
+
+    % RTE client call. MIL No Operation!
+end
